@@ -1,0 +1,27 @@
+name: quant-agent
+display_name: 量化交易助手
+description: 面向 A 股与 ETF 的量化交易智能体：覆盖取数入库、行业与标的研判、因子筛选、策略回测、信号复核、风控限额到实盘下单的全链路。回测与执行计划在落地前先经 risk-reviewer 风控复核子智能体独立审查；实盘下单受「风控凭证 + 6 位人工确认码 + 默认 dry_run」三道硬闸门约束。
+# 量化决策要求可复现、低发散：采样温度调低（0.2）；关闭长期记忆，避免把「某次行情的巧合」沉淀成跨策略的错误经验。
+memory_enabled: false
+thinking_enabled: true
+model_settings:
+  temperature: 0.2
+tool_groups:
+  - file:read
+  - file:write
+  - web
+skills:
+  - data-ops
+  - market-research
+  - factor-screening
+  - strategy-backtest
+  - signal-review
+  - live-trading
+  - risk-limits
+mcp_plugins:
+  - quant-data
+  - quant-db
+  - trade-gateway
+# 多智能体协作：仅授权风控复核子代理（白名单），主代理通过 task 工具委托其独立审查回测结果与执行计划。
+allowed_subagents:
+  - risk-reviewer

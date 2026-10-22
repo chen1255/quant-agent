@@ -1,0 +1,63 @@
+{
+  "case_id": "clean",
+  "title": "干净样例：as-of 取数 + 样本外 + 后移对照通过 + 成本入模 + 集中度合规",
+  "expected_verdict": "通过",
+  "expected_dimensions": [],
+  "record": {
+    "strategy_id": "etf-momentum-20d",
+    "sample": {"start": "2021-01-01", "end": "2025-12-31", "sample_type": "out", "has_out_of_sample": true},
+    "universe": {
+      "source": "explicit_symbols",
+      "point_in_time": true,
+      "includes_delisted": true,
+      "exclude_st": true
+    },
+    "factors": [
+      {
+        "name": "momentum_20d",
+        "lookback_source": "bars_daily",
+        "uses_pub_date": true,
+        "note": "纯量价因子，不涉及财务数据；未使用未来信息"
+      }
+    ],
+    "execution": {
+      "signal_date": "调仓日",
+      "fill_price": "下一交易日开盘价",
+      "fill_on_next_trading_day": true,
+      "adjust_mode_consistent": true,
+      "note": "复权价配复权量计算指标，成交量与成交额保持未复权口径"
+    },
+    "cost_model": {
+      "commission_rate": 0.00025,
+      "min_commission": 5.0,
+      "stamp_tax_rate": 0.0005,
+      "transfer_fee_rate": 0.00001,
+      "slippage_rate": 0.001
+    },
+    "overfitting": {
+      "param_grid_size": 18,
+      "param_neighborhood_stable": true,
+      "note": "窗口 15/20/25 三档，±10% 邻域夏普 1.6~1.9，无断崖"
+    },
+    "performance": {
+      "annual_return": 0.158,
+      "sharpe": 1.7,
+      "max_drawdown": -0.17,
+      "max_drawdown_days": 96,
+      "win_rate": 0.58,
+      "profit_loss_ratio": 1.6,
+      "turnover": 2.6
+    },
+    "lag_shift_test": {"checked": true, "turned_negative": false,
+                       "result": "信号整体后移 1 个交易日后年化 0.131，仍为正，未出现由正转负"},
+    "concentration": {"max_single_weight": 0.40, "top5_weight": 0.40, "max_sw1_pct": 0.40},
+    "liquidity": {"min_avg_amount": 260000000, "planned_order_amount": 100000, "impact_cost_estimate": 0.0004},
+    "limits": {"max_position_pct": 0.40, "max_order_amount": 100000, "min_cash_pct": 0.05, "allow_leverage": false},
+    "plan": {
+      "symbols": ["510300.SH", "510500.SH"],
+      "total_order_amount": 100000,
+      "tradability_checked": true,
+      "note": "已用 get_limit_status 核过涨跌停与停牌，均非停牌且限价在区间内"
+    }
+  }
+}

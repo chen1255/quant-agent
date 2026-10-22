@@ -1,0 +1,32 @@
+# --- Local runtime state produced by install.ps1 (lives inside the DeerFlow
+# --- instance, never in this asset repository) ---
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# --- Machine-private config (absolute paths / accounts / secrets) ---
+*.local.json
+*.local.yaml
+extensions_config.local.json
+.env
+.env.*
+
+# --- Backups created by the installer ---
+*.bak
+*.bak_*
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

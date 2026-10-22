@@ -1,0 +1,54 @@
+{
+  "case_id": "no-out-of-sample",
+  "title": "只有样本内表现 + 参数网格过大（过拟合风险）",
+  "expected_verdict": "不建议执行",
+  "expected_dimensions": ["样本内外", "过拟合"],
+  "record": {
+    "strategy_id": "etf-momentum-20d",
+    "sample": {"start": "2024-01-01", "end": "2025-12-31", "sample_type": "in", "has_out_of_sample": false},
+    "universe": {
+      "source": "explicit_symbols",
+      "point_in_time": true,
+      "includes_delisted": true,
+      "exclude_st": true
+    },
+    "factors": [
+      {
+        "name": "momentum_20d",
+        "lookback_source": "bars_daily",
+        "uses_pub_date": true,
+        "note": "仅用量价，无财务数据"
+      }
+    ],
+    "execution": {
+      "signal_date": "调仓日",
+      "fill_price": "下一交易日开盘价",
+      "fill_on_next_trading_day": true,
+      "adjust_mode_consistent": true
+    },
+    "cost_model": {
+      "commission_rate": 0.00025,
+      "min_commission": 5.0,
+      "stamp_tax_rate": 0.0005,
+      "transfer_fee_rate": 0.00001,
+      "slippage_rate": 0.001
+    },
+    "overfitting": {
+      "param_grid_size": 720,
+      "param_neighborhood_stable": false,
+      "note": "窗口 5~120 日 × 持仓数 1~6 全网格寻优，±10% 邻域夏普从 2.6 掉到 0.4"
+    },
+    "performance": {
+      "annual_return": 0.412,
+      "sharpe": 3.1,
+      "max_drawdown": -0.06,
+      "win_rate": 0.78,
+      "turnover": 8.5
+    },
+    "lag_shift_test": {"checked": true, "turned_negative": false,
+                       "result": "后移 1 日后年化 0.35，仍为正"},
+    "concentration": {"max_single_weight": 0.40, "top5_weight": 0.40, "max_sw1_pct": 0.40},
+    "liquidity": {"min_avg_amount": 300000000, "planned_order_amount": 100000},
+    "plan": {"symbols": ["510300.SH", "510500.SH"], "total_order_amount": 100000, "leverage": false}
+  }
+}

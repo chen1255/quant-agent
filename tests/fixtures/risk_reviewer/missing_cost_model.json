@@ -1,0 +1,44 @@
+{
+  "case_id": "missing-cost-model",
+  "title": "未计入交易成本的回测（cost_model_json 缺失）",
+  "expected_verdict": "不建议执行",
+  "expected_dimensions": ["交易成本"],
+  "record": {
+    "strategy_id": "etf-momentum-20d",
+    "sample": {"start": "2021-01-01", "end": "2025-12-31", "sample_type": "out", "has_out_of_sample": true},
+    "universe": {
+      "source": "explicit_symbols",
+      "point_in_time": true,
+      "includes_delisted": true,
+      "exclude_st": true
+    },
+    "factors": [
+      {
+        "name": "momentum_60d",
+        "lookback_source": "bars_daily",
+        "uses_pub_date": true,
+        "note": "仅用量价"
+      }
+    ],
+    "execution": {
+      "signal_date": "调仓日",
+      "fill_price": "下一交易日开盘价",
+      "fill_on_next_trading_day": true,
+      "adjust_mode_consistent": true
+    },
+    "cost_model": null,
+    "overfitting": {"param_grid_size": 12, "param_neighborhood_stable": true},
+    "performance": {
+      "annual_return": 0.221,
+      "sharpe": 1.9,
+      "max_drawdown": -0.14,
+      "win_rate": 0.63,
+      "turnover": 3.1
+    },
+    "lag_shift_test": {"checked": true, "turned_negative": false,
+                       "result": "后移 1 日后年化 0.19，仍为正"},
+    "concentration": {"max_single_weight": 0.35, "top5_weight": 0.35, "max_sw1_pct": 0.35},
+    "liquidity": {"min_avg_amount": 250000000, "planned_order_amount": 80000},
+    "plan": {"symbols": ["159915.SZ"], "total_order_amount": 80000, "leverage": false}
+  }
+}

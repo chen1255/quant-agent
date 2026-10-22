@@ -1,0 +1,49 @@
+{
+  "case_id": "future-function",
+  "title": "用了公告日之前的财报 + 当日收盘价成交（典型前视偏差）",
+  "expected_verdict": "不建议执行",
+  "expected_dimensions": ["前视偏差"],
+  "record": {
+    "strategy_id": "hs300-value-quality",
+    "sample": {"start": "2021-01-01", "end": "2025-12-31", "sample_type": "in", "has_out_of_sample": true},
+    "universe": {
+      "source": "index_members_current",
+      "point_in_time": false,
+      "includes_delisted": true,
+      "exclude_st": true
+    },
+    "factors": [
+      {
+        "name": "roe_ttm",
+        "lookback_source": "fundamentals",
+        "uses_pub_date": false,
+        "note": "直接取 report_period 当季的 ROE，未按 pub_date 做 as-of 过滤"
+      }
+    ],
+    "execution": {
+      "signal_date": "调仓日",
+      "fill_price": "调仓日收盘价",
+      "fill_on_next_trading_day": false,
+      "adjust_mode_consistent": true
+    },
+    "cost_model": {
+      "commission_rate": 0.00025,
+      "min_commission": 5.0,
+      "stamp_tax_rate": 0.0005,
+      "transfer_fee_rate": 0.00001,
+      "slippage_rate": 0.001
+    },
+    "overfitting": {"param_grid_size": 24, "param_neighborhood_stable": true},
+    "performance": {
+      "annual_return": 0.286,
+      "sharpe": 2.9,
+      "max_drawdown": -0.08,
+      "win_rate": 0.71,
+      "turnover": 2.4
+    },
+    "lag_shift_test": {"checked": false, "turned_negative": null, "result": null},
+    "concentration": {"max_single_weight": 0.05, "top5_weight": 0.23, "max_sw1_pct": 0.28},
+    "liquidity": {"min_avg_amount": 80000000, "planned_order_amount": 100000},
+    "plan": {"symbols": ["600519.SH"], "total_order_amount": 100000, "leverage": false}
+  }
+}
