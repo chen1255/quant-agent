@@ -262,7 +262,7 @@ $quantDbServer = [ordered]@{
     enabled              = $true
     type                 = "stdio"
     command              = $uvxCmd
-    args                 = @("--with", "mcp==1.2.1", "mcp-server-sqlite", "--db-path", $dbAbsPath)
+    args                 = @("--python", "3.12", "--with", "mcp==1.2.1", "--with", "pydantic==2.11.7", "mcp-server-sqlite", "--db-path", $dbAbsPath)
     cwd                  = (Join-Path $DeerFlowRoot "backend")
     env                  = [ordered]@{
         UV_CACHE_DIR     = $uvCacheDir
