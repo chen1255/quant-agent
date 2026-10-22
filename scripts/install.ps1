@@ -34,6 +34,10 @@
     -EnableTrading 时使用。xtquant 随 QMT 分发、不在 PyPI，脚本用 PYTHONPATH 注入，
     不执行任何 pip install。
 
+.PARAMETER QmtAccount
+    资金账号。仅 -EnableTrading 且传了 -QmtPath 时使用；不传会写成占位符
+    「<你的资金账号>」，需事后手工改 extensions_config.json。
+
 .PARAMETER UseDuckDuckGo
     是否把 web_search 切换到免 API key 的 DuckDuckGo（默认 $true）。
 
@@ -46,7 +50,7 @@
 
 .EXAMPLE
     .\scripts\install.ps1
-    .\scripts\install.ps1 -EnableTrading -QmtPath "C:\国金QMT"
+    .\scripts\install.ps1 -EnableTrading -QmtPath "C:\国金QMT" -QmtAccount "你的资金账号"
     .\scripts\install.ps1 -Uninstall
 #>
 [CmdletBinding()]
@@ -55,6 +59,7 @@ param(
     [string]$UserId = "",
     [switch]$EnableTrading,
     [string]$QmtPath = "",
+    [string]$QmtAccount = "",
     [bool]$UseDuckDuckGo = $true,
     [switch]$SkipSubagent,
     [switch]$Uninstall
@@ -215,6 +220,12 @@ Write-Step 3 $TotalSteps $venvMsg $(if ($venvOk) { "Cyan" } else { "Yellow" })
 
 # --- 4. 合并三个 MCP 与 7 个 skill 开关 ---
 Assert-Path $extPath "deer-flow/extensions_config.json（请先在 DeerFlow 中完成一次初始化）"
+# 改动全局配置前先做带时间戳的备份，便于出错回滚
+foreach ($f in @($extPath, $cfgPath)) {
+    if (Test-Path $f) {
+        Copy-Item $f "$f.bak_$(Get-Date -Format 'yyyyMMdd-HHmmss')" -Force
+    }
+}
 $ext = Get-Content $extPath -Raw -Encoding UTF8 | ConvertFrom-Json
 if (-not $ext.mcpServers) { $ext | Add-Member -NotePropertyName mcpServers -NotePropertyValue ([pscustomobject]@{}) -Force }
 if (-not $ext.skills) { $ext | Add-Member -NotePropertyName skills -NotePropertyValue ([pscustomobject]@{}) -Force }
@@ -280,9 +291,13 @@ $tradeEnv = [ordered]@{
 }
 if ($QmtPath) {
     # xtquant 随 QMT 客户端分发、不在 PyPI，用 PYTHONPATH 注入而不是 pip install
-    $tradeEnv["PYTHONPATH"]      = Join-Path $QmtPath "bin.x64\Lib\site-packages"
+    $xtq = Join-Path $QmtPath "bin.x64\Lib\site-packages"
+    if (-not (Test-Path (Join-Path $xtq "xtquant"))) {
+        Write-Host "  [警告] $xtq 下未找到 xtquant，路径可能不对；dry_run 不受影响，真报单会失败" -ForegroundColor Yellow
+    }
+    $tradeEnv["PYTHONPATH"]      = $xtq
     $tradeEnv["QUANT_QMT_PATH"]  = Join-Path $QmtPath "userdata_mini"
-    $tradeEnv["QUANT_QMT_ACCOUNT"] = "<你的资金账号>"
+    $tradeEnv["QUANT_QMT_ACCOUNT"] = $(if ($QmtAccount) { $QmtAccount } else { "<你的资金账号>" })
     $tradeEnv["QUANT_QMT_ACCOUNT_TYPE"] = "stock"
 }
 

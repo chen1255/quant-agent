@@ -206,7 +206,7 @@ quant-agent/
 # 或指定实例与用户：
 .\scripts\install.ps1 -DeerFlowRoot "D:\path\to\deer-flow" -UserId "<your-user-id>"
 # 启用实盘网关（仍然默认 dry_run，不报券商）：
-.\scripts\install.ps1 -EnableTrading -QmtPath "C:\国金QMT"
+.\scripts\install.ps1 -EnableTrading -QmtPath "C:\国金QMT" -QmtAccount "你的资金账号"
 # 卸载（保留 quant.db 与 venv）：
 .\scripts\install.ps1 -Uninstall
 ```
@@ -223,7 +223,7 @@ quant-agent/
 8. 把 `web_search` 由 tavily（需 Key）切换为 DuckDuckGo（`-UseDuckDuckGo:$false` 可保留原后端）；
 9. 收尾提示：重启 Gateway、先跑一次 data-ops 取数、校验子代理键、卸载方式。
 
-可用参数：`-DeerFlowRoot`、`-UserId`、`-EnableTrading`、`-QmtPath`、`-UseDuckDuckGo`、
+可用参数：`-DeerFlowRoot`、`-UserId`、`-EnableTrading`、`-QmtPath`、`-QmtAccount`、`-UseDuckDuckGo`、
 `-SkipSubagent`（仅调试用）、`-Uninstall`。
 
 随后**重启 Gateway**（配置不热加载），在新会话中选择「**量化交易助手**」。安装前会备份被改动的
