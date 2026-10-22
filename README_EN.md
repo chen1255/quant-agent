@@ -225,7 +225,7 @@ Run in a normal PowerShell window (the script defaults to `d:\...\deepflow\deer-
 # or target a different instance / user:
 .\scripts\install.ps1 -DeerFlowRoot "D:\path\to\deer-flow" -UserId "<your-user-id>"
 # enable the trading gateway (still dry-run by default, no broker orders):
-.\scripts\install.ps1 -EnableTrading -QmtPath "C:\国金QMT"
+.\scripts\install.ps1 -EnableTrading -QmtPath "C:\国金QMT" -QmtAccount "your-fund-account"
 # uninstall (keeps quant.db and the venv):
 .\scripts\install.ps1 -Uninstall
 ```
@@ -249,7 +249,7 @@ The installer idempotently performs **9 steps**:
 9. Print the follow-ups: restart the Gateway, run data-ops once, verify the sub-agent keys, and how to
    uninstall.
 
-Available parameters: `-DeerFlowRoot`, `-UserId`, `-EnableTrading`, `-QmtPath`, `-UseDuckDuckGo`,
+Available parameters: `-DeerFlowRoot`, `-UserId`, `-EnableTrading`, `-QmtPath`, `-QmtAccount`, `-UseDuckDuckGo`,
 `-SkipSubagent` (debugging only), `-Uninstall`.
 
 Then **restart the Gateway** (configuration is not hot-reloaded) and pick **"量化交易助手"** in a new
