@@ -4,7 +4,8 @@
 **口径清楚、可复现、经独立风控复核**的一条链路 —— 取数入库 → 行业研判 → 因子筛选 → 回测 →
 信号复核 → 风控限额 → 受限下单。要动真金白银之前，先过独立风控复核与本地下单闸门。
 
-> 这是一个跑在 [DeerFlow](https://github.com/bytedance/deer-flow)（字节跳动开源、基于 LangGraph 的 Agent 框架）**之上的行业 Agent 资产包**。
+> 这是一个**跑在 [DeerFlow](https://github.com/bytedance/deer-flow)（字节跳动开源、基于 LangGraph 的 Agent 框架）之上的行业 Agent 资产包**，
+> 也可以不依赖 DeerFlow，用仓库自带的 [`cli/quantctl.py`](cli/quantctl.py) 直接运行。
 > 本仓库**不包含、也不是** DeerFlow 框架本体，而是一套可一键挂载到已有 DeerFlow 实例上的「人设 + 技能 + 领域库 + 子智能体」原创配置与内容。运行时、模型调用、工具与 Web UI 均由 DeerFlow 提供。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -168,6 +169,10 @@ quant-agent/
 │  │  └─ mcp.example.json               # 状态库 MCP 配置片段
 │  └─ trade-gateway/mcp.example.json    # 交易 MCP 片段（enabled:false + PYTHONPATH 注入 xtquant）
 ├─ subagents/risk-reviewer.yaml         # 风控复核子智能体（4 空格缩进片段 + 幂等标记块）
+├─ cli/                                 # 独立运行入口（不依赖 DeerFlow）
+│  ├─ quantctl.py                       #   MCP 桥 + 工具循环 + 技能收窄 + 复核委托
+│  ├─ config.example.json               #   配置模板（本机路径请用 config.local.json）
+│  └─ requirements.txt                  #   mcp / httpx
 ├─ scripts/
 │  ├─ install.ps1                       # Windows 一键安装器（9 步，幂等）
 │  └─ check_consistency.py              # 一致性校验（离线，8 类检查）
@@ -243,6 +248,40 @@ quant-agent/
    `subagents.custom_agents:` 之下。
 
 细节与挂载点见 [docs/architecture.md](docs/architecture.md)。
+
+## 独立运行（不依赖 DeerFlow）
+
+DeerFlow 提供编排、UI 与登录，但**不是运行前提**。三个 MCP server 本身就是 stdio 独立进程，
+`cli/quantctl.py` 把它们直接挂起来跑同一套资产：
+
+```powershell
+# 1. 准备依赖（mcp + httpx；也可直接用 quant-data 的 venv）
+pip install -r cli/requirements.txt
+
+# 2. 复制配置并改成你本机的绝对路径
+copy cli\config.example.json cli\config.local.json
+
+# 3. 自检：MCP 连接数 / 技能与子代理加载 / 模型连通性
+python cli\quantctl.py --config cli\config.local.json doctor
+
+# 4. 一次性执行 / 交互式会话
+python cli\quantctl.py --config cli\config.local.json run "查一下本地 510300 的日线覆盖到哪一天"
+python cli\quantctl.py --config cli\config.local.json chat
+```
+
+它复用了同一批资产，行为与 DeerFlow 内一致：
+
+| 环节 | quantctl 的做法 |
+|---|---|
+| 人设 | `persona/SOUL.md` 作为系统提示词 |
+| 技能 | 系统提示词只放 `name + description`；模型调 `describe_skill` 时才读入全文，并**按技能 `allowed-tools` 收窄工具集** |
+| 取数 / 状态库 / 下单 | 三个 MCP 经 stdio 挂载，工具名带 server 前缀（`quant-data_*`、`quant-db_*`、`trade-gateway_*`） |
+| 风控复核 | `task` 工具只接受 `risk-reviewer`，子代理提示词取自 `subagents/risk-reviewer.yaml`，工具白名单只有 `read_file` + `quant-db` 的三个只读工具 |
+| 四道闸 | 完全在 MCP 代码层，quantctl 不绕过、也不重复实现 |
+
+`cli/config.local.json` 已被 `.gitignore` 覆盖（含本机路径），不要提交。模型默认
+`deepseek-v4-pro`，API key 从 `DEEPSEEK_API_KEY` 读取；换成任何 OpenAI 兼容端点只需改
+`base_url` 与 `model`。
 
 ## 自动化校验与测试
 

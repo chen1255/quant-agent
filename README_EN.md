@@ -11,6 +11,7 @@ independent risk review and the local order gates.
 > This repository **does not contain and is not** the DeerFlow framework itself — it is an original set of
 > persona, skills, domain schema and sub-agent configuration that mounts onto an existing DeerFlow
 > instance with a single script. The runtime, model calls, tooling and web UI are all provided by DeerFlow.
+> DeerFlow is optional, though: [`cli/quantctl.py`](cli/quantctl.py) runs the same assets as a standalone CLI.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -184,6 +185,10 @@ quant-agent/
 │  │  └─ mcp.example.json               # state DB MCP snippet
 │  └─ trade-gateway/mcp.example.json    # trading snippet (enabled:false + xtquant via PYTHONPATH)
 ├─ subagents/risk-reviewer.yaml         # risk-review sub-agent (4-space indented fragment + idempotent markers)
+├─ cli/                                 # standalone entry point (no DeerFlow required)
+│  ├─ quantctl.py                       #   MCP bridge + tool loop + skill narrowing + review delegation
+│  ├─ config.example.json               #   template (use config.local.json for machine paths)
+│  └─ requirements.txt                  #   mcp / httpx
 ├─ scripts/
 │  ├─ install.ps1                       # one-click Windows installer (9 steps, idempotent)
 │  └─ check_consistency.py              # cross-file consistency check (offline, 8 categories)
@@ -270,6 +275,40 @@ session. Modified `config.yaml` and `extensions_config.json` are backed up next 
    the existing `subagents.custom_agents:` key in `config.yaml`.
 
 See [docs/architecture.md](docs/architecture.md) for the mount points in detail.
+
+## Running without DeerFlow
+
+DeerFlow supplies orchestration, UI and login, but it is **not a runtime prerequisite**. The three MCP
+servers are plain stdio processes, and `cli/quantctl.py` mounts them directly against the same assets:
+
+```powershell
+# 1. Dependencies (mcp + httpx)
+pip install -r cli/requirements.txt
+
+# 2. Copy the template and fill in absolute local paths
+copy cli\config.example.json cli\config.local.json
+
+# 3. Self-check: MCP connections / skills & sub-agent / model reachability
+python cli\quantctl.py --config cli\config.local.json doctor
+
+# 4. One-shot or interactive
+python cli\quantctl.py --config cli\config.local.json run "Show how far the local 510300 daily bars go"
+python cli\quantctl.py --config cli\config.local.json chat
+```
+
+Behaviour mirrors the DeerFlow setup:
+
+| Piece | How quantctl does it |
+|---|---|
+| Persona | `persona/SOUL.md` becomes the system prompt |
+| Skills | Only `name + description` are in the prompt; the model calls `describe_skill` to load the full text, and the toolset is then **narrowed to that skill's `allowed-tools`** |
+| Data / state DB / execution | The three MCP servers are mounted over stdio with server-prefixed tool names (`quant-data_*`, `quant-db_*`, `trade-gateway_*`) |
+| Risk review | The `task` tool only accepts `risk-reviewer`; its prompt comes from `subagents/risk-reviewer.yaml` and its tools are limited to `read_file` plus the three read-only `quant-db` tools |
+| Four gates | Live entirely in the MCP code layer; quantctl neither bypasses nor reimplements them |
+
+`cli/config.local.json` is covered by `.gitignore` (machine paths) — do not commit it. The default model
+is `deepseek-v4-pro` with the key read from `DEEPSEEK_API_KEY`; point `base_url` and `model` at any
+OpenAI-compatible endpoint to switch.
 
 ## Automated checks and tests
 
